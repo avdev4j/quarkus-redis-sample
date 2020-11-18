@@ -7,18 +7,20 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.BCryptPasswordHasher;
 import com.mycompany.myapp.security.RandomUtil;
 import com.mycompany.myapp.service.dto.UserDTO;
+import com.mycompany.myapp.service.redis.UserRedisProvider;
 import io.quarkus.panache.common.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 @Transactional
@@ -26,6 +28,9 @@ public class UserService {
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
     final BCryptPasswordHasher passwordHasher;
+
+    @Inject
+    UserRedisProvider userRedisProvider;
 
     @Inject
     public UserService(BCryptPasswordHasher passwordHasher) {
@@ -247,7 +252,12 @@ public class UserService {
     }
 
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return User.findOneWithAuthoritiesByLogin(login);
+        return userRedisProvider.retrieve("USER:" + login).or(() -> {
+            Optional<User> maybeUser = User.findOneWithAuthoritiesByLogin(login);
+            userRedisProvider.set("USER:" + login, maybeUser.get());
+
+            return maybeUser;
+        });
     }
 
     public List<UserDTO> getAllManagedUsers() {

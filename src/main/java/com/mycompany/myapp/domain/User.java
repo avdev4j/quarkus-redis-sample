@@ -186,13 +186,13 @@ public class User extends PanacheEntityBase implements Serializable {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE u.id = ?1", id).firstResultOptional();
     }
 
-    
+
     public static Optional<User> findOneWithAuthoritiesByLogin(String login) {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE u.login = ?1", login)
             .firstResultOptional();
     }
 
-    
+
     public static Optional<User> findOneWithAuthoritiesByEmailIgnoreCase(String email) {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE LOWER(u.login) = LOWER(?1)", email)
             .firstResultOptional();
