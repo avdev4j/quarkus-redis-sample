@@ -3,7 +3,6 @@ package com.mycompany.myapp.service.redis;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.redis.client.RedisClient;
-import io.quarkus.redis.client.reactive.ReactiveRedisClient;
 import io.vertx.redis.client.Response;
 import java.lang.reflect.ParameterizedType;
 import java.util.*;
@@ -14,9 +13,6 @@ import javax.inject.Inject;
 public abstract class RedisCache<T> {
     @Inject
     RedisClient redis;
-
-    @Inject
-    ReactiveRedisClient reactiveRedis;
 
     @Inject
     ObjectMapper objectMapper;
