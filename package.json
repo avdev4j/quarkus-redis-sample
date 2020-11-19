@@ -71,6 +71,7 @@
     "optimize-css-assets-webpack-plugin": "5.0.3",
     "postcss-loader": "3.0.0",
     "prettier": "2.0.5",
+    "prettier-plugin-java": "0.8.0",
     "rimraf": "3.0.2",
     "sass": "1.26.9",
     "sass-loader": "8.0.2",
@@ -96,7 +97,7 @@
     "node": ">=12.16.1"
   },
   "scripts": {
-    "prettier:format": "prettier --write \"{,src/**/}*.{md,json,ts,css,scss,yml}\"",
+    "prettier:format": "prettier --write \"{,src/**/}*.{md,json,ts,css,scss,yml,java}\"",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "ngc": "ngc -p tsconfig.app.json",
