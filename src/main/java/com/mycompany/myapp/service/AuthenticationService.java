@@ -4,15 +4,17 @@ import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.security.BCryptPasswordHasher;
 import com.mycompany.myapp.security.UserNotActivatedException;
 import com.mycompany.myapp.security.UsernameNotFoundException;
+import com.mycompany.myapp.service.redis.UserRedisCache;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
-import java.util.Locale;
-import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class AuthenticationService {
@@ -27,6 +29,9 @@ public class AuthenticationService {
     public AuthenticationService(BCryptPasswordHasher passwordHasher) {
         this.passwordHasher = passwordHasher;
     }
+
+    @Inject
+    UserRedisCache userRedisCache;
 
     public QuarkusSecurityIdentity authenticate(String login, String password) {
         User user = loadByUsername(login);
@@ -44,13 +49,12 @@ public class AuthenticationService {
         log.debug("Authenticating {}", login);
 
         if (login.matches(emailValidator)) {
-            return User
-                .findOneWithAuthoritiesByEmailIgnoreCase(login)
+            return userRedisCache.get(User.cacheKey(login), User::findOneWithAuthoritiesByEmailIgnoreCase)
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
         }
         String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return User
-            .findOneWithAuthoritiesByLogin(lowercaseLogin)
+
+        return userRedisCache.get(User.cacheKey(lowercaseLogin), User::findOneWithAuthoritiesByLogin)
             .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
     }
 

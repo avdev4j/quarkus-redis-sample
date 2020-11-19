@@ -192,17 +192,16 @@ public class User extends PanacheEntityBase implements Serializable {
             .firstResult();
     }
 
-
-    public static Optional<User> findOneWithAuthoritiesByEmailIgnoreCase(String email) {
+    public static User findOneWithAuthoritiesByEmailIgnoreCase(String email) {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE LOWER(u.login) = LOWER(?1)", email)
-            .firstResultOptional();
+            .firstResult();
     }
 
     public static List<User> findAllByLoginNot(Page page, String login) {
         return find("login != ?1", login).page(page).list();
     }
 
-    public static String cacheKey(String login) {
-        return String.format(USER_LOGIN_KEY_CACHE, login);
+    public static String cacheKey(String rightHandKey) {
+        return String.format(USER_LOGIN_KEY_CACHE, rightHandKey);
     }
 }
