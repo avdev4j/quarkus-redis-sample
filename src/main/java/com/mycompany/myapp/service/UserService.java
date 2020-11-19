@@ -7,7 +7,7 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.BCryptPasswordHasher;
 import com.mycompany.myapp.security.RandomUtil;
 import com.mycompany.myapp.service.dto.UserDTO;
-import com.mycompany.myapp.service.redis.UserRedisProvider;
+import com.mycompany.myapp.service.redis.UserRedisCache;
 import io.quarkus.panache.common.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class UserService {
     final BCryptPasswordHasher passwordHasher;
 
     @Inject
-    UserRedisProvider userRedisProvider;
+    UserRedisCache userRedisCache;
 
     @Inject
     public UserService(BCryptPasswordHasher passwordHasher) {
@@ -252,7 +252,7 @@ public class UserService {
     }
 
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRedisProvider.get(User.cacheKey(login), User::findOneWithAuthoritiesByLogin);
+        return userRedisCache.get(User.cacheKey(login), User::findOneWithAuthoritiesByLogin);
     }
 
     public List<UserDTO> getAllManagedUsers() {

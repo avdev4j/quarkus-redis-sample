@@ -14,10 +14,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
-public abstract class AbstractRedisProvider<T> {
+public abstract class RedisCache<T> {
     @Inject
     RedisClient redis;
 
@@ -28,14 +26,10 @@ public abstract class AbstractRedisProvider<T> {
     ObjectMapper objectMapper;
 
     public static final String NULL_KEYS_NOT_SUPPORTED_MSG = "Null keys are not supported";
-    private final Class<T> type;
+    final Class<T> type;
 
-    public AbstractRedisProvider() {
+    public RedisCache() {
         this.type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-    }
-
-    public Class<T> getMyType() {
-        return this.type;
     }
 
     public Optional<T> get(Object key, Function<String, T> valueLoader) {
@@ -90,7 +84,7 @@ public abstract class AbstractRedisProvider<T> {
             return null;
         }
 
-        return objectMapper.readValue(response.toString(), getMyType());
+        return objectMapper.readValue(response.toString(), this.type);
     }
 
     protected String serialize(T value) throws JsonProcessingException {

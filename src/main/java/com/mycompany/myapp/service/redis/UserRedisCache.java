@@ -5,5 +5,5 @@ import com.mycompany.myapp.domain.User;
 import javax.inject.Singleton;
 
 @Singleton
-public class UserRedisProvider extends AbstractRedisProvider<User> {
+public class UserRedisCache extends RedisCache<User> {
 }
