@@ -21,6 +21,11 @@ public abstract class RedisCache<T> {
     ObjectMapper objectMapper;
 
     final Class<T> type;
+    /**
+     * The prefix used to define the key for storage purpose.
+     * It should have a delimiter, like : / - ... to make the key searching easier.
+     * e.g. "USER:"
+     */
     final String prefix;
 
     public RedisCache(String prefix) {
@@ -28,7 +33,16 @@ public abstract class RedisCache<T> {
         this.prefix = prefix;
     }
 
-    abstract String generateKey(Object identifier);
+    /**
+     * This method generate the key used to store an element in the cache.
+     * The identifier has to be unique to form an unique key combine with the prefix.
+     *
+     * @param identifier an unique identifier for a given object to store.
+     * @return the key used to store the element in the store
+     */
+    final String generateKey(Object identifier) {
+        return prefix + identifier;
+    }
 
     public Optional<T> get(Object identifier, Supplier<T> valueLoader) {
         if (identifier == null) {
