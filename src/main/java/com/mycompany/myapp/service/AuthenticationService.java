@@ -49,12 +49,12 @@ public class AuthenticationService {
         log.debug("Authenticating {}", login);
 
         if (login.matches(emailValidator)) {
-            return userRedisCache.get(User.cacheKey(login), User::findOneWithAuthoritiesByEmailIgnoreCase)
+            return userRedisCache.get(User.cacheKey(login), () -> User.findOneWithAuthoritiesByEmailIgnoreCase(login))
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
         }
         String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
 
-        return userRedisCache.get(User.cacheKey(lowercaseLogin), User::findOneWithAuthoritiesByLogin)
+        return userRedisCache.get(User.cacheKey(lowercaseLogin), () -> User.findOneWithAuthoritiesByLogin(lowercaseLogin))
             .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
     }
 
