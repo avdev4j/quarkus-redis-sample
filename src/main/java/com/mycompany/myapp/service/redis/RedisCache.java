@@ -4,13 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.redis.client.RedisClient;
 import io.quarkus.redis.client.reactive.ReactiveRedisClient;
-import io.smallrye.mutiny.Uni;
 import io.vertx.redis.client.Response;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -65,16 +61,23 @@ public abstract class RedisCache<T> {
         }
     }
 
-    public void delete(Object key) {
+    public void evict(Object key) {
         if (key == null) {
             throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
         }
 
-        this.deleteAll(Collections.singletonList(key));
+        this.evict(Collections.singletonList(key));
     }
 
-    public void deleteAll(List<Object> keys) {
-        List<String> keysAsString = keys.stream().map(Object::toString).collect(Collectors.toList());
+    public void clear() {
+        evict(keys());
+    }
+
+    public void evict(List<Object> keys) {
+        if (keys == null) {
+            throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
+        }
+        List<String> keysAsString = keys.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
 
         redis.del(keysAsString);
     }

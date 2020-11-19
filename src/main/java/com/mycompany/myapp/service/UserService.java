@@ -278,7 +278,7 @@ public class UserService {
             keys.add(User.cacheKey(user.email));
         }
 
-        userRedisCache.deleteAll(keys);
+        userRedisCache.evict(keys);
     }
 
 }
