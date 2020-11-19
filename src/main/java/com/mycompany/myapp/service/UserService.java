@@ -252,12 +252,7 @@ public class UserService {
     }
 
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRedisProvider.retrieve("USER:" + login).or(() -> {
-            Optional<User> maybeUser = User.findOneWithAuthoritiesByLogin(login);
-            userRedisProvider.set("USER:" + login, maybeUser.get());
-
-            return maybeUser;
-        });
+        return userRedisProvider.get(User.cacheKey(login), User::findOneWithAuthoritiesByLogin);
     }
 
     public List<UserDTO> getAllManagedUsers() {
