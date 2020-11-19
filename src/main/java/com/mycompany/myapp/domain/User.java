@@ -27,7 +27,7 @@ import org.hibernate.annotations.Cache;
 @Cacheable
 public class User extends PanacheEntityBase implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static String USER_LOGIN_KEY_CACHE ="USER:%s";
+    private static String USER_PREFIX_KEY_CACHE ="USER:";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -202,6 +202,7 @@ public class User extends PanacheEntityBase implements Serializable {
     }
 
     public static String cacheKey(String rightHandKey) {
-        return String.format(USER_LOGIN_KEY_CACHE, rightHandKey);
+        String leftHandKey = USER_PREFIX_KEY_CACHE + "%s";
+        return String.format(leftHandKey, rightHandKey);
     }
 }

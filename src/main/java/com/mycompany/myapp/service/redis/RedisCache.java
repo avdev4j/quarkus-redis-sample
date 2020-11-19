@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
@@ -32,7 +32,7 @@ public abstract class RedisCache<T> {
         this.type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
-    public Optional<T> get(Object key, Function<String, T> valueLoader) {
+    public Optional<T> get(Object key, Supplier<T> valueLoader) {
         if (key == null) {
             throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
         }
@@ -46,7 +46,7 @@ public abstract class RedisCache<T> {
         }
 
         if (result == null) {
-            result = valueLoader.apply(keyAsString);
+            result = valueLoader.get();
             this.set(keyAsString, result);
         }
 
@@ -65,18 +65,26 @@ public abstract class RedisCache<T> {
         }
     }
 
-    public Uni<Void> delete(Object key) {
+    public void delete(Object key) {
         if (key == null) {
             throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
         }
 
-        return this.deleteAll(Collections.singletonList(key));
+        this.deleteAll(Collections.singletonList(key));
     }
 
-    public Uni<Void> deleteAll(List<Object> keys) {
+    public void deleteAll(List<Object> keys) {
         List<String> keysAsString = keys.stream().map(Object::toString).collect(Collectors.toList());
 
-        return reactiveRedis.del(keysAsString).map(response -> null);
+        redis.del(keysAsString);
+    }
+
+    public List<String> keys() {
+        return keys("*");
+    }
+
+    public List<String> keys(String filter) {
+        return redis.keys(filter + "*").stream().map(Object::toString).collect(Collectors.toList());
     }
 
     protected T deserialize(Response response) throws JsonProcessingException {

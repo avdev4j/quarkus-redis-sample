@@ -16,10 +16,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -46,6 +43,7 @@ public class UserService {
                     // activate given user for the registration key.
                     user.activated = true;
                     user.activationKey = null;
+                    this.clearUserCaches(user);
                     log.debug("Activated user: {}", user);
                     return user;
                 }
@@ -62,6 +60,7 @@ public class UserService {
                     user.password = passwordHasher.hash(newPassword);
                     user.resetKey = null;
                     user.resetDate = null;
+                    this.clearUserCaches(user);
                     return user;
                 }
             );
@@ -75,6 +74,7 @@ public class UserService {
                 user -> {
                     user.resetKey = RandomUtil.generateResetKey();
                     user.resetDate = Instant.now();
+                    this.clearUserCaches(user);
                     return user;
                 }
             );
@@ -120,6 +120,7 @@ public class UserService {
         Authority.<Authority>findByIdOptional(AuthoritiesConstants.USER).ifPresent(authorities::add);
         newUser.authorities = authorities;
         User.persist(newUser);
+        this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
         return newUser;
     }
@@ -129,6 +130,7 @@ public class UserService {
             return false;
         }
         User.delete("id", existingUser.id);
+        this.clearUserCaches(existingUser);
         return true;
     }
 
@@ -159,6 +161,7 @@ public class UserService {
                 .collect(Collectors.toSet());
         }
         User.persist(user);
+        this.clearUserCaches(user);
         log.debug("Created Information for User: {}", user);
         return user;
     }
@@ -185,6 +188,7 @@ public class UserService {
                     }
                     user.langKey = langKey;
                     user.imageUrl = imageUrl;
+                    this.clearUserCaches(user);
                     log.debug("Changed Information for User: {}", user);
                 }
             );
@@ -218,6 +222,7 @@ public class UserService {
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .forEach(managedAuthorities::add);
+                    this.clearUserCaches(user);
                     log.debug("Changed Information for User: {}", user);
                     return user;
                 }
@@ -231,6 +236,7 @@ public class UserService {
             .ifPresent(
                 user -> {
                     User.delete("id", user.id);
+                    this.clearUserCaches(user);
                     log.debug("Deleted User: {}", user);
                 }
             );
@@ -246,13 +252,14 @@ public class UserService {
                         throw new InvalidPasswordException();
                     }
                     user.password = passwordHasher.hash(newPassword);
+                    this.clearUserCaches(user);
                     log.debug("Changed password for User: {}", user);
                 }
             );
     }
 
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRedisCache.get(User.cacheKey(login), User::findOneWithAuthoritiesByLogin);
+        return userRedisCache.get(User.cacheKey(login), () -> User.findOneWithAuthoritiesByLogin(login));
     }
 
     public List<UserDTO> getAllManagedUsers() {
@@ -261,6 +268,17 @@ public class UserService {
 
     public List<String> getAuthorities() {
         return Authority.<Authority>streamAll().map(authority -> authority.name).collect(Collectors.toList());
+    }
+
+    public void clearUserCaches(User user) {
+        List<Object> keys = new ArrayList<>();
+        keys.add(User.cacheKey(user.login));
+
+        if (user.email != null) {
+            keys.add(User.cacheKey(user.email));
+        }
+
+        userRedisCache.deleteAll(keys);
     }
 
 }
