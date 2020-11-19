@@ -12,44 +12,53 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 public abstract class RedisCache<T> {
+    public static final String NULL_KEYS_NOT_SUPPORTED_MSG = "Null keys are not supported";
+
     @Inject
     RedisClient redis;
 
     @Inject
     ObjectMapper objectMapper;
 
-    public static final String NULL_KEYS_NOT_SUPPORTED_MSG = "Null keys are not supported";
     final Class<T> type;
+    final String prefix;
 
-    public RedisCache() {
+    public RedisCache(String prefix) {
         this.type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        this.prefix = prefix;
     }
 
-    public Optional<T> get(Object key, Supplier<T> valueLoader) {
-        if (key == null) {
+    abstract String generateKey(Object identifier);
+
+    public Optional<T> get(Object identifier, Supplier<T> valueLoader) {
+        if (identifier == null) {
             throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
         }
         T result;
-        String keyAsString = key.toString();
 
         try {
-            result = deserialize(redis.get(keyAsString));
+            String key = generateKey(identifier);
+            result = deserialize(redis.get(key));
         } catch (JsonProcessingException e) {
             throw new CacheErrorException(e);
         }
 
         if (result == null) {
             result = valueLoader.get();
-            this.set(keyAsString, result);
+            this.set(identifier, result);
         }
 
         return Optional.ofNullable(result);
     }
 
-    public void set(String key, T value) {
+    public void set(Object identifier, T value) {
+        if (identifier == null) {
+            throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
+        }
         if (value == null) {
             return;
         }
+        String key = generateKey(identifier);
 
         try {
             redis.set(Arrays.asList(key, serialize(value)));
@@ -58,33 +67,29 @@ public abstract class RedisCache<T> {
         }
     }
 
-    public void evict(Object key) {
-        if (key == null) {
-            throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
-        }
-
-        this.evict(Collections.singletonList(key));
-    }
-
     public void clear() {
         evict(keys());
     }
 
-    public void evict(List<Object> keys) {
-        if (keys == null) {
+    public void evict(Object identifier) {
+        if (identifier == null) {
             throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
         }
-        List<String> keysAsString = keys.stream().filter(Objects::nonNull).map(Object::toString).collect(Collectors.toList());
 
-        redis.del(keysAsString);
+        this.evict(Collections.singletonList(identifier));
+    }
+
+    public void evict(List<Object> identifiers) {
+        if (identifiers == null) {
+            throw new NullPointerException(NULL_KEYS_NOT_SUPPORTED_MSG);
+        }
+        List<String> finalKeys = identifiers.stream().filter(Objects::nonNull).map(this::generateKey).collect(Collectors.toList());
+
+        redis.del(finalKeys);
     }
 
     public List<String> keys() {
-        return keys("*");
-    }
-
-    public List<String> keys(String filter) {
-        return redis.keys(filter + "*").stream().map(Object::toString).collect(Collectors.toList());
+        return redis.keys(prefix + "*").stream().map(Object::toString).collect(Collectors.toList());
     }
 
     protected T deserialize(Response response) throws JsonProcessingException {

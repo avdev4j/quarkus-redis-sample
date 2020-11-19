@@ -259,7 +259,7 @@ public class UserService {
     }
 
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRedisCache.get(User.cacheKey(login), () -> User.findOneWithAuthoritiesByLogin(login));
+        return userRedisCache.get(login, () -> User.findOneWithAuthoritiesByLogin(login));
     }
 
     public List<UserDTO> getAllManagedUsers() {
@@ -272,10 +272,10 @@ public class UserService {
 
     public void clearUserCaches(User user) {
         List<Object> keys = new ArrayList<>();
-        keys.add(User.cacheKey(user.login));
+        keys.add(user.login);
 
         if (user.email != null) {
-            keys.add(User.cacheKey(user.email));
+            keys.add(user.email);
         }
 
         userRedisCache.evict(keys);
