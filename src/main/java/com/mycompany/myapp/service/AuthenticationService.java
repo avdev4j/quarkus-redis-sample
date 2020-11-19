@@ -4,7 +4,7 @@ import com.mycompany.myapp.domain.User;
 import com.mycompany.myapp.security.BCryptPasswordHasher;
 import com.mycompany.myapp.security.UserNotActivatedException;
 import com.mycompany.myapp.security.UsernameNotFoundException;
-import com.mycompany.myapp.service.redis.UserRedisCache;
+import com.mycompany.myapp.cache.redis.UserRedisCache;
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;

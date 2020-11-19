@@ -1,4 +1,4 @@
-package com.mycompany.myapp.service.redis;
+package com.mycompany.myapp.cache.redis;
 
 import com.mycompany.myapp.domain.User;
 

@@ -1,4 +1,4 @@
-package com.mycompany.myapp.service.redis;
+package com.mycompany.myapp.cache;
 
 public class CacheErrorException extends RuntimeException {
 

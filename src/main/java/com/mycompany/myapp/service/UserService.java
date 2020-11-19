@@ -7,7 +7,7 @@ import com.mycompany.myapp.security.AuthoritiesConstants;
 import com.mycompany.myapp.security.BCryptPasswordHasher;
 import com.mycompany.myapp.security.RandomUtil;
 import com.mycompany.myapp.service.dto.UserDTO;
-import com.mycompany.myapp.service.redis.UserRedisCache;
+import com.mycompany.myapp.cache.redis.UserRedisCache;
 import io.quarkus.panache.common.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

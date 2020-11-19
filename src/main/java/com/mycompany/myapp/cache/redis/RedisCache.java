@@ -1,7 +1,8 @@
-package com.mycompany.myapp.service.redis;
+package com.mycompany.myapp.cache.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mycompany.myapp.cache.CacheErrorException;
 import io.quarkus.redis.client.RedisClient;
 import io.vertx.redis.client.Response;
 import java.lang.reflect.ParameterizedType;
