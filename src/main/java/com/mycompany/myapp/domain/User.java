@@ -27,6 +27,7 @@ import org.hibernate.annotations.Cache;
 @Cacheable
 public class User extends PanacheEntityBase implements Serializable {
     private static final long serialVersionUID = 1L;
+    private static String USER_LOGIN_KEY_CACHE ="USER:%s";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -186,10 +187,9 @@ public class User extends PanacheEntityBase implements Serializable {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE u.id = ?1", id).firstResultOptional();
     }
 
-
-    public static Optional<User> findOneWithAuthoritiesByLogin(String login) {
+    public static User findOneWithAuthoritiesByLogin(String login) {
         return find("FROM User u LEFT JOIN FETCH u.authorities WHERE u.login = ?1", login)
-            .firstResultOptional();
+            .firstResult();
     }
 
 
@@ -200,5 +200,9 @@ public class User extends PanacheEntityBase implements Serializable {
 
     public static List<User> findAllByLoginNot(Page page, String login) {
         return find("login != ?1", login).page(page).list();
+    }
+
+    public static String cacheKey(String login) {
+        return String.format(USER_LOGIN_KEY_CACHE, login);
     }
 }
