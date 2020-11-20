@@ -74,7 +74,7 @@ public abstract class RedisCache<T> {
             throw new CacheErrorException(e);
         }
 
-        if (result == null) {
+        if (result == null && valueLoader != null) {
             result = valueLoader.get();
             this.set(identifier, result);
         }
