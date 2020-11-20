@@ -108,7 +108,11 @@ public abstract class RedisCache<T> {
      * Remove all entries in the cache according to keys returned by the keys() method.
      */
     public void clear() {
-        evict(keys());
+        List<String> currentKeys = keys();
+
+        if (!currentKeys.isEmpty()) {
+            redis.del(keys());
+        }
     }
 
     /**
